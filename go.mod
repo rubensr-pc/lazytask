@@ -1,4 +1,4 @@
-module example.com/user/hello
+module rubensr-pc.com/user/lazytask
 
 go 1.14
 
