@@ -236,6 +236,12 @@ func main() {
 			}
 			src := fmt.Sprintf("%s", out)
 			allRows := strings.Split(src, "\n")
+
+			if len(allRows) < 3 {
+				intervalsTable.Clear()
+				return
+			}
+
 			var colSizes []int
 			for _, v := range strings.Split(allRows[2], " ") {
 				colSizes = append(colSizes, len(v))
@@ -270,10 +276,12 @@ func main() {
 					if curCol <= newCol {
 						text = strings.Trim(data[curCol:newCol], " ")
 					}
-					intervalsTable.SetCell(row+1, col,
-						tview.NewTableCell(text).
-							SetTextColor(rowTextColor).
-							SetSelectable(text != "" && col == 3))
+					app.QueueUpdateDraw(func() {
+						intervalsTable.SetCell(row+1, col,
+							tview.NewTableCell(text).
+								SetTextColor(rowTextColor).
+								SetSelectable(text != "" && col == 3))
+					})
 					curCol = newCol + 1
 				}
 			}
