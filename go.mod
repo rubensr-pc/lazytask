@@ -10,4 +10,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/nsf/termbox-go v0.0.0-20200418040025-38ba6e5628f1 // indirect
 	github.com/rivo/tview v0.0.0-20200712113419-c65badfc3d92
+	golang.org/x/sys v0.0.0-20200808120158-1030fc2bf1d9 // indirect
+	golang.org/x/text v0.3.3 // indirect
 )

@@ -108,6 +108,13 @@ func doneTask(t string) {
 	}
 }
 
+func deleteTask(t string) {
+	_, err := exec.Command("task", "delete", "rc.confirmation:no", t).Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	var pages *tview.Pages
 
@@ -156,10 +163,10 @@ func main() {
 				case tcell.KeyEnter:
 					newTaskName := strings.Trim(addTaskField.GetText(), " ")
 					if newTaskName != "" {
+						addTask(newTaskName)
 						addTaskField.SetText("")
 						pages.HidePage("addtask")
 						app.SetFocus(tasksTable)
-						addTask(newTaskName)
 					}
 				}
 			})).
@@ -213,6 +220,10 @@ func main() {
 				t := tasksTable.GetCell(r, 0).Text
 				doneTask(t)
 			}
+		case tcell.KeyDelete, tcell.KeyBackspace:
+			r, _ := tasksTable.GetSelection()
+			t := tasksTable.GetCell(r, 0).Text
+			deleteTask(t)
 		}
 
 		return event
@@ -257,10 +268,12 @@ func main() {
 				if newCol > len(allRows[1]) {
 					newCol = len(allRows[1])
 				}
-				intervalsTable.SetCell(0, i,
-					tview.NewTableCell(allRows[1][curCol:newCol]).
-						SetTextColor(tcell.ColorTeal).
-						SetSelectable(false))
+				app.QueueUpdate(func() {
+					intervalsTable.SetCell(0, i,
+						tview.NewTableCell(allRows[1][curCol:newCol]).
+							SetTextColor(tcell.ColorTeal).
+							SetSelectable(false))
+				})
 				curCol = newCol + 1
 			}
 
@@ -276,7 +289,7 @@ func main() {
 					if curCol <= newCol {
 						text = strings.Trim(data[curCol:newCol], " ")
 					}
-					app.QueueUpdateDraw(func() {
+					app.QueueUpdate(func() {
 						intervalsTable.SetCell(row+1, col,
 							tview.NewTableCell(text).
 								SetTextColor(rowTextColor).
@@ -285,6 +298,7 @@ func main() {
 					curCol = newCol + 1
 				}
 			}
+			app.Draw()
 		}
 	}()
 
@@ -315,10 +329,12 @@ func main() {
 				if newCol > len(allRows[1]) {
 					newCol = len(allRows[1])
 				}
-				tasksTable.SetCell(0, i,
-					tview.NewTableCell(strings.Trim(allRows[1][curCol:newCol], " ")).
-						SetTextColor(tcell.ColorTeal).
-						SetSelectable(false))
+				app.QueueUpdate(func() {
+					tasksTable.SetCell(0, i,
+						tview.NewTableCell(strings.Trim(allRows[1][curCol:newCol], " ")).
+							SetTextColor(tcell.ColorTeal).
+							SetSelectable(false))
+				})
 				curCol = newCol + 1
 			}
 
@@ -335,12 +351,15 @@ func main() {
 					if newCol > len(data) {
 						newCol = len(data)
 					}
-					tasksTable.SetCell(row+1, col,
-						tview.NewTableCell(strings.Trim(data[curCol:newCol], " ")).
-							SetTextColor(rowTextColor))
+					app.QueueUpdate(func() {
+						tasksTable.SetCell(row+1, col,
+							tview.NewTableCell(strings.Trim(data[curCol:newCol], " ")).
+								SetTextColor(rowTextColor))
+					})
 					curCol = newCol + 1
 				}
 			}
+			app.Draw()
 		}
 	}()
 
