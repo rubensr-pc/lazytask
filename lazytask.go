@@ -115,6 +115,13 @@ func deleteTask(t string) {
 	}
 }
 
+func deleteInterval(i string) {
+	_, err := exec.Command("timew", "delete", i).Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	var pages *tview.Pages
 
@@ -233,6 +240,10 @@ func main() {
 		switch key := event.Key(); key {
 		case tcell.KeyLeft, tcell.KeyRight:
 			return nil
+		case tcell.KeyDelete, tcell.KeyBackspace:
+			r, c := intervalsTable.GetSelection()
+			i := intervalsTable.GetCell(r, c).Text
+			deleteInterval(i)
 		}
 
 		return event
@@ -258,7 +269,7 @@ func main() {
 				colSizes = append(colSizes, len(v))
 			}
 
-			if len(colSizes) != intervalsTable.GetColumnCount() {
+			if len(colSizes) != intervalsTable.GetColumnCount() || len(allRows) != tasksTable.GetRowCount()+3 {
 				intervalsTable.Clear()
 			}
 
