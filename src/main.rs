@@ -32,8 +32,13 @@ fn main() {
 
     let mut text = String::new();
     let tasks = taskwarrior::get_task_list(&mut text).unwrap();
+    let columns = tasks.columns
+        .iter()
+        .map(|x| TableColumn::new(x.to_string()))
+        .collect();
+
     let tasks_table = SimpleTableView::default()
-        .columns(tasks.columns)
+        .columns(columns)
         .rows(tasks.rows);
     
     let task_pane = Panel::new(
