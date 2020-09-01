@@ -1,0 +1,15 @@
+[package]
+name = "cursive"
+version = "0.1.0"
+authors = ["pc"]
+edition = "2018"
+
+[dependencies]
+chrono = "*"
+cursive_buffered_backend = "*"
+rand= "*"
+
+[dependencies.cursive]
+version = "*"
+default-features = false
+features = ["crossterm-backend", "toml"]
