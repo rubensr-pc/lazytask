@@ -74,7 +74,15 @@ impl SimpleTableView {
         self.with(|t| t.set_columns(columns))
     }
 
-    pub fn set_rows(&mut self, rows: Vec<Vec<String>>) {
+    pub fn set_rows<S: Into<String>>(&mut self, rows: Vec<Vec<S>>) {
+        let rows = rows
+            .into_iter()
+            .map(|row| {
+                row.into_iter()
+                    .map(|c| c.into())
+                    .collect()
+            })
+            .collect();
         self.rows = rows;
         self.selected_row = None;
         self.focus = 0;
@@ -84,7 +92,7 @@ impl SimpleTableView {
         self.set_focus_row(0);
     }
 
-    pub fn rows(self: SimpleTableView, rows: Vec<Vec<String>>) -> Self {
+    pub fn rows<S: Into<String>>(self: SimpleTableView, rows: Vec<Vec<S>>) -> Self {
         self.with(|t| t.set_rows(rows))
     }
 
@@ -266,9 +274,9 @@ pub struct TableColumn {
 }
 
 impl TableColumn {
-    pub fn new(title: String) -> Self {
+    pub fn new<S: Into<String>>(title: S) -> Self {
         Self {
-            title,
+            title: title.into(),
             alignment: HAlign::Left,
             width: 0,
             requested_width: None
