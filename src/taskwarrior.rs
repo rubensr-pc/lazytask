@@ -37,12 +37,12 @@ fn parse_task_list<'a, 'b>(text: &'a str) -> Result<TaskList<'a>, &'b str> {
     let colsizes: Vec<usize> = get_column_sizes(&mut lines);
 
     lines = text.lines();
-    let first_line = lines.nth(0).unwrap_or_default();
+    let first_line = lines.nth(1).unwrap_or_default();
     let columns = split_row(first_line, &colsizes);
 
     lines = text.lines();
     let mut rows: Vec<Vec<&str>> = lines
-        .skip(2)
+        .skip(3)
         .take_while(|x: &&str| (*x).trim().len() > 0)
         .map(|line: &str| split_row(line, &colsizes))
         .collect();
@@ -72,7 +72,7 @@ fn split_row<'a>(text: &'a str, colsizes: &Vec<usize>) -> Vec<&'a str> {
 
 fn get_column_sizes(lines: &mut std::str::Lines) -> Vec<usize> {
     let mut colsizes: Vec<usize> = lines
-        .nth(1)
+        .nth(2)
         .unwrap_or_default()
         .split_ascii_whitespace()
         .map(|x: &str| x.len())
@@ -89,7 +89,8 @@ mod tests {
 
     #[test]
     fn test_parse_task_list() {
-        let data = "ID Description
+        let data = "
+ID Description
 -- -----------
 1  Buy milk
 3  Bake cake
@@ -125,7 +126,8 @@ mod tests {
 
     #[test]
     fn column_sizes() {
-        let data = "ID Description
+        let data = "
+ID Description
 -- -----------
 1  Buy milk
 2  Buy eggs

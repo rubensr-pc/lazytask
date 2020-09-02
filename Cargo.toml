@@ -1,5 +1,5 @@
 [package]
-name = "cursive"
+name = "lazytask"
 version = "0.1.0"
 authors = ["pc"]
 edition = "2018"

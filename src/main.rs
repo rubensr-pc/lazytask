@@ -32,9 +32,9 @@ fn main() {
 
     let mut text = String::new();
     let tasks = taskwarrior::get_task_list(&mut text).unwrap();
-    let columns = tasks.columns
-        .iter()
-        .map(|x| TableColumn::new(x.to_string()))
+    let columns: Vec<TableColumn> = tasks.columns
+        .into_iter()
+        .map(|x| TableColumn::new(x))
         .collect();
 
     let tasks_table = SimpleTableView::default()
