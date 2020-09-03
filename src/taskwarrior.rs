@@ -4,11 +4,28 @@ use std::process::Command;
 
 #[allow(dead_code)]
 pub struct TaskList<'a> {
+    pub colsizes: Vec<usize>,
     pub columns: Vec<&'a str>,
     pub rows: Vec<Vec<&'a str>>
 }
 
 #[allow(dead_code)]
+pub fn get_interval_list<'a, 'b>(text: &'a mut String)-> Result<TaskList<'a>, &'b str> {
+    let output = Command::new("timew")
+        .arg("summary")
+        .arg(":ids")
+        .output();
+
+    let stdout = match output {
+        Ok(o) => String::from_utf8(o.stdout).unwrap_or_default(),
+        Err(_) => return Err("Could not convert command output to UTF-8 string")
+    };
+
+    text.push_str(&stdout);
+
+    parse_task_list(text)
+}
+
 pub fn get_task_list<'a, 'b>(text: &'a mut String) -> Result<TaskList<'a>, &'b str> {
     let output = Command::new("task")
         .arg("next")
@@ -28,6 +45,7 @@ fn parse_task_list<'a, 'b>(text: &'a str) -> Result<TaskList<'a>, &'b str> {
     let mut lines = text.lines();
     if lines.count() < 3 {
         return Ok(TaskList {
+            colsizes: [].to_vec(),
             columns: [].to_vec(),
             rows: [].to_vec()
         });
@@ -55,32 +73,29 @@ fn parse_task_list<'a, 'b>(text: &'a str) -> Result<TaskList<'a>, &'b str> {
 
         ia.cmp(&ib)
     });
-    Ok(TaskList { columns, rows })
+    Ok(TaskList { colsizes, columns, rows })
 }
 
 fn split_row<'a>(text: &'a str, colsizes: &Vec<usize>) -> Vec<&'a str> {
     let max = text.len();
+    let mut save: usize = 0;
     colsizes.iter()
-        .zip(colsizes.iter().skip(1))
-        .map(|(a, b): (&usize, &usize)| {
-            let end = cmp::min(max, *a + *b + 1);
-            let start = *a;
+        .map(|width| {
+            let start = save;
+            let end = cmp::min(max, start + width);
+            save += width + 1;
             text[start..end].trim()
         })
         .collect()
 }
 
 fn get_column_sizes(lines: &mut std::str::Lines) -> Vec<usize> {
-    let mut colsizes: Vec<usize> = lines
+    lines
         .nth(2)
         .unwrap_or_default()
         .split_ascii_whitespace()
         .map(|x: &str| x.len())
-        .collect();
-
-    colsizes.insert(0, 0);
-
-    colsizes
+        .collect()
 }
 
 #[cfg(test)]
@@ -127,27 +142,29 @@ ID Description
     #[test]
     fn column_sizes() {
         let data = "
-ID Description
--- -----------
-1  Buy milk
-2  Buy eggs
-3  Bake cake
+ID Description Age
+-- ----------- ---
+1  Buy milk    1
+2  Buy eggs    2
+3  Bake cake   5
 
 3 tasks.";
 
         let colsizes = get_column_sizes(&mut data.lines());
-        assert_eq!([0, 2, 11].to_vec(), colsizes);
+        assert_eq!([2, 11, 3].to_vec(), colsizes);
     }
     
     #[test]
     fn split_line() {
-        let line = "1  Buy milk";
-        let colsizes = [0, 2, 20].to_vec();
+        let line = " 1 9w  Intercom adhoc    0.38";
+        let colsizes = [2, 3, 17, 4].to_vec();
 
         let x = split_row(line, &colsizes);
 
-        assert_eq!(2, x.len());
+        assert_eq!(4, x.len());
         assert_eq!("1", *x.get(0).unwrap());
-        assert_eq!("Buy milk", *x.get(1).unwrap());
+        assert_eq!("9w", *x.get(1).unwrap());
+        assert_eq!("Intercom adhoc", *x.get(2).unwrap());
+        assert_eq!("0.38", *x.get(3).unwrap());
     }
 }

@@ -261,7 +261,7 @@ impl View for SimpleTableView {
 }
 
 #[allow(dead_code)]
-enum TableColumnWidth {
+pub enum TableColumnWidth {
     Percent(usize),
     Absolute(usize),
 }
@@ -274,12 +274,12 @@ pub struct TableColumn {
 }
 
 impl TableColumn {
-    pub fn new<S: Into<String>>(title: S) -> Self {
+    pub fn new<S: Into<String>>(title: S, requested_width: Option<TableColumnWidth>) -> Self {
         Self {
             title: title.into(),
             alignment: HAlign::Left,
             width: 0,
-            requested_width: None
+            requested_width
         }
     }
 

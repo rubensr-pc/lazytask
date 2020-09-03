@@ -12,7 +12,7 @@ use cursive::views::{Dialog, LinearLayout, Panel, EditView, OnEventView};
 mod cursive_simple_table_view;
 mod taskwarrior;
 
-use cursive_simple_table_view::{SimpleTableView, TableColumn};
+use cursive_simple_table_view::{SimpleTableView, TableColumn, TableColumnWidth};
 
 fn main() {
     let mut siv = Cursive::new(|| {
@@ -20,7 +20,7 @@ fn main() {
         let buffered_backend = cursive_buffered_backend::BufferedBackend::new(crossterm_backend);
         Box::new(buffered_backend)
     });
-    
+
     siv.add_global_callback(cursive::event::Key::Esc, |s : &mut Cursive| s.quit());
     siv.load_toml(include_str!("../assets/style.toml")).unwrap();
 
@@ -34,7 +34,8 @@ fn main() {
     let tasks = taskwarrior::get_task_list(&mut text).unwrap();
     let columns: Vec<TableColumn> = tasks.columns
         .into_iter()
-        .map(|x| TableColumn::new(x))
+        .zip(tasks.colsizes)
+        .map(|(title, width)| TableColumn::new(title, Some(TableColumnWidth::Absolute(width))))
         .collect();
 
     let tasks_table = SimpleTableView::default()
@@ -127,7 +128,7 @@ fn gen_data() -> (Vec<TableColumn>, Vec<Vec<String>>, usize, usize) {
     let num_cols = rng.gen_range(3, 6);
     let mut cols = Vec::new();
     for i in 0..num_cols {
-        let col = TableColumn::new(format!("C{}", i+1));
+        let col = TableColumn::new(format!("C{}", i+1), None);
         cols.push(col);
     }
 
