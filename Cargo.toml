@@ -12,4 +12,4 @@ rand= "*"
 [dependencies.cursive]
 version = "*"
 default-features = false
-features = ["termion-backend", "toml"]
+features = ["ncurses-backend", "toml"]
