@@ -1,7 +1,7 @@
 use std::thread;
 use std::time::Duration;
 
-use rand::Rng;
+// use rand::Rng;
 
 // use chrono::Utc;
 
@@ -15,6 +15,24 @@ mod taskwarrior;
 use cursive_simple_table_view::{SimpleTableView, TableColumn, TableColumnWidth};
 
 fn main() {
+    let mut tasks_text = String::new();
+    let tasks = taskwarrior::get_task_list(&mut tasks_text)
+        .expect("Task List");
+    let tasks_columns: Vec<TableColumn> = tasks.columns
+        .into_iter()
+        .zip(tasks.colsizes)
+        .map(|(title, width)| TableColumn::new(title, Some(TableColumnWidth::Absolute(width))))
+        .collect();
+
+    let mut intervals_text = String::new();
+    let intervals = taskwarrior::get_interval_list(&mut intervals_text)
+        .expect("Interval List");
+    let intervals_columns: Vec<TableColumn> = intervals.columns
+        .into_iter()
+        .zip(intervals.colsizes)
+        .map(|(title, width)| TableColumn::new(title, Some(TableColumnWidth::Absolute(width))))
+        .collect();
+
     let mut siv = Cursive::new(|| {
         let crossterm_backend = cursive::backends::crossterm::Backend::init().unwrap();
         let buffered_backend = cursive_buffered_backend::BufferedBackend::new(crossterm_backend);
@@ -24,22 +42,8 @@ fn main() {
     siv.add_global_callback(cursive::event::Key::Esc, |s : &mut Cursive| s.quit());
     siv.load_toml(include_str!("../assets/style.toml")).unwrap();
 
-    // let (columns, rows, _ ,_) = gen_data();
-    // let tasks_table = SimpleTableView::default()
-    //     .columns(columns)
-    //     .rows(rows)
-    //     .selected_row(Some(2));
-
-    let mut text = String::new();
-    let tasks = taskwarrior::get_task_list(&mut text).unwrap();
-    let columns: Vec<TableColumn> = tasks.columns
-        .into_iter()
-        .zip(tasks.colsizes)
-        .map(|(title, width)| TableColumn::new(title, Some(TableColumnWidth::Absolute(width))))
-        .collect();
-
     let tasks_table = SimpleTableView::default()
-        .columns(columns)
+        .columns(tasks_columns)
         .rows(tasks.rows);
     
     let task_pane = Panel::new(
@@ -51,10 +55,9 @@ fn main() {
             .on_event(cursive::event::Key::Backspace, task_delete)
         ).title("Tasks");
     
-    let (columns, rows, _ ,_) = gen_data();
     let intervals_table = SimpleTableView::default()
-        .columns(columns)
-        .rows(rows);
+        .columns(intervals_columns)
+        .rows(intervals.rows);
 
     let interval_pane = Panel::new(
         intervals_table
@@ -74,7 +77,7 @@ fn main() {
             // let now = Utc::now().format("%H:%M:%S");
     
             cb_sink.send(Box::new(move |_s| {
-                let (_columns, _rows, _num_cols, _num_rows) = gen_data();
+                // let (_columns, _rows, _num_cols, _num_rows) = gen_data();
                 // s.call_on_name("tasks_table", |view: &mut SimpleTableView| {
                 //     view.set_columns(columns);
                 //     view.set_rows(rows);
@@ -121,27 +124,3 @@ fn cancel_dialog(s: &mut Cursive) {
 }
 
 fn task_done(_s: &mut Cursive) {}
-
-fn gen_data() -> (Vec<TableColumn>, Vec<Vec<String>>, usize, usize) {
-    let mut rng = rand::thread_rng();
-
-    let num_cols = rng.gen_range(3, 6);
-    let mut cols = Vec::new();
-    for i in 0..num_cols {
-        let col = TableColumn::new(format!("C{}", i+1), None);
-        cols.push(col);
-    }
-
-    let mut rows = Vec::new();
-    let num_rows = rng.gen_range(4, 10);
-    for i in 0..num_rows {
-        let mut row = Vec::new();
-        row.push(format!("Name {}", i));
-        for _ in 1..num_cols {
-            row.push(format!("{}", rng.gen_range(0, 255)));
-        }
-        rows.push(row);
-    }
-
-    (cols, rows, num_cols, num_rows)
-}

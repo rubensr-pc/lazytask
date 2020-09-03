@@ -23,7 +23,7 @@ pub fn get_interval_list<'a, 'b>(text: &'a mut String)-> Result<TaskList<'a>, &'
 
     text.push_str(&stdout);
 
-    parse_task_list(text)
+    parse_task_list(text, false)
 }
 
 pub fn get_task_list<'a, 'b>(text: &'a mut String) -> Result<TaskList<'a>, &'b str> {
@@ -38,10 +38,10 @@ pub fn get_task_list<'a, 'b>(text: &'a mut String) -> Result<TaskList<'a>, &'b s
 
     text.push_str(&stdout);
 
-    parse_task_list(text)
+    parse_task_list(text, true)
 }
 
-fn parse_task_list<'a, 'b>(text: &'a str) -> Result<TaskList<'a>, &'b str> {
+fn parse_task_list<'a, 'b>(text: &'a str, sort: bool) -> Result<TaskList<'a>, &'b str> {
     let mut lines = text.lines();
     if lines.count() < 3 {
         return Ok(TaskList {
@@ -65,14 +65,17 @@ fn parse_task_list<'a, 'b>(text: &'a str) -> Result<TaskList<'a>, &'b str> {
         .map(|line: &str| split_row(line, &colsizes))
         .collect();
 
-    rows.sort_by(|a: &Vec<&str>, b: &Vec<&str>| {
-        let sa = *a.get(0).unwrap();
-        let sb = *b.get(0).unwrap();
-        let ia: u32 = sa.parse().unwrap();
-        let ib: u32 = sb.parse().unwrap();
+    if sort {
+        rows.sort_by(|a: &Vec<&str>, b: &Vec<&str>| {
+            let sa = *a.get(0).unwrap();
+            let sb = *b.get(0).unwrap();
+            let ia: u32 = sa.parse().unwrap();
+            let ib: u32 = sb.parse().unwrap();
 
-        ia.cmp(&ib)
-    });
+            ia.cmp(&ib)
+        });
+    }
+
     Ok(TaskList { colsizes, columns, rows })
 }
 
@@ -81,7 +84,7 @@ fn split_row<'a>(text: &'a str, colsizes: &Vec<usize>) -> Vec<&'a str> {
     let mut save: usize = 0;
     colsizes.iter()
         .map(|width| {
-            let start = save;
+            let start = cmp::min(max, save);
             let end = cmp::min(max, start + width);
             save += width + 1;
             text[start..end].trim()
@@ -113,7 +116,7 @@ ID Description
 
 3 tasks.";
 
-        let result = parse_task_list(data);
+        let result = parse_task_list(data, true);
         assert_eq!(true, result.is_ok());
 
         let result = result.unwrap();
@@ -127,10 +130,34 @@ ID Description
     }
 
     #[test]
+    fn test_parse_task_list_2() {
+        let data = "
+Wk  Date       Day ID Tags                       Start      End    Time   Total
+--- ---------- --- -- ----------------------- -------- -------- ------- -------
+W36 2020-09-03 Thu @6 Planning with GL and KS  9:00:00 10:00:00 1:00:00
+                   @5 AlwaysOn activities     10:14:59 11:30:00 1:15:01
+                   @4 AlwaysOn activities     12:00:00 13:08:36 1:08:36
+                   @3 Backlog grooming        13:10:00 15:20:00 2:10:00
+                   @2 code reviews            15:38:59 15:59:55 0:20:56
+                   @1 code reviews            16:19:10 17:15:16 0:56:06 6:50:39
+                                                                                
+                                                                        6:50:39";
+
+        let result = parse_task_list(data, false);
+        assert_eq!(true, result.is_ok());
+
+        let result = result.unwrap();
+        assert_eq!(9, result.columns.len());
+        assert_eq!(["Wk", "Date", "Day", "ID", "Tags", "Start", "End", "Time", "Total"].to_vec(), result.columns);
+
+        assert_eq!(6, result.rows.len());
+    }
+
+    #[test]
     fn test_parse_task_list_empty() {
         let data = "No matches.";
 
-        let result = parse_task_list(data);
+        let result = parse_task_list(data, true );
         assert_eq!(true, result.is_ok());
 
         let result = result.unwrap();
