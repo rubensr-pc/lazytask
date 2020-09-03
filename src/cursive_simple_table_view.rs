@@ -13,6 +13,7 @@ pub struct SimpleTableView {
     enabled: bool,
     scrollbase: ScrollBase,
     last_size: Vec2,
+    compact: bool,
 
     columns: Vec<TableColumn>,
     rows: Vec<Vec<String>>,
@@ -32,6 +33,7 @@ impl SimpleTableView {
             enabled: true,
             scrollbase: ScrollBase::new(),
             last_size: Vec2::new(0, 0),
+            compact: true,
 
             columns: Vec::new(),
             rows: Vec::new(),
@@ -118,7 +120,7 @@ impl SimpleTableView {
     }
 
     fn draw_item(&self, printer: &Printer, row_index: usize) {
-        self.draw_columns(printer, "┆ ", |printer, column, column_index| {
+        self.draw_columns(printer, "│ ", |printer, column, column_index| {
             let value = &self.rows[row_index][column_index];
             column.draw_row(printer, value);
         });
@@ -135,7 +137,7 @@ impl SimpleTableView {
 
 impl View for SimpleTableView {
     fn draw(&self, printer: &Printer) {
-        self.draw_columns(printer, "╷ ", |printer, column, _| {
+        self.draw_columns(printer, "│ ", |printer, column, _| {
             let color = theme::ColorStyle::title_primary();
 
             printer.with_color(color, |printer| {
@@ -143,15 +145,16 @@ impl View for SimpleTableView {
             });
         });
 
-        self.draw_columns(
-            &printer.offset((0, 1)).focused(true),
-            "┴─",
-            |printer, column, _| {
-                printer.print_hline((0, 0), column.width + 1, "─");
-            },
-        );
-
-        let printer = &printer.offset((0, 2)).focused(true);
+        if !self.compact {
+            self.draw_columns(
+                &printer.offset((0, 1)).focused(true),
+                "┴─",
+                |printer, column, _| {
+                    printer.print_hline((0, 0), column.width + 1, "─");
+                },
+            );
+        }
+        let printer = &printer.offset((0, if self.compact { 1 } else { 2 })).focused(true);
 
         self.scrollbase.draw(printer, |printer, i| {
             let style = if i == self.focus && self.enabled {
@@ -180,7 +183,7 @@ impl View for SimpleTableView {
 
         // Extend the vertical bars to the end of the view
         for y in self.scrollbase.content_height..printer.size.y {
-            self.draw_columns(&printer.offset((0, y)), "┆ ", |_, _, _| ());
+            self.draw_columns(&printer.offset((0, y)), "│ ", |_, _, _| ());
         }
     }
 
@@ -198,10 +201,10 @@ impl View for SimpleTableView {
             .iter_mut()
             .partition(|c| c.requested_width.is_some());
 
-        // Subtract one for the seperators between our columns (that's column_count - 1)
+        // Subtract one for the separators between our columns (that's column_count - 1)
         let mut available_width = size.x.saturating_sub(column_count.saturating_sub(1) * 3);
 
-        // Reduce the with in case we are displaying a scrollbar
+        // Reduce the width in case we are displaying a scrollbar
         if size.y.saturating_sub(1) < item_count {
             available_width = available_width.saturating_sub(2);
         }

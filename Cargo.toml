@@ -12,4 +12,4 @@ rand= "*"
 [dependencies.cursive]
 version = "*"
 default-features = false
-features = ["crossterm-backend", "toml"]
+features = ["termion-backend", "toml"]

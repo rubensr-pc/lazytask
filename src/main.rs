@@ -33,11 +33,12 @@ fn main() {
         .map(|(title, width)| TableColumn::new(title, Some(TableColumnWidth::Absolute(width))))
         .collect();
 
-    let mut siv = Cursive::new(|| {
-        let crossterm_backend = cursive::backends::crossterm::Backend::init().unwrap();
-        let buffered_backend = cursive_buffered_backend::BufferedBackend::new(crossterm_backend);
-        Box::new(buffered_backend)
-    });
+    let mut siv = cursive::default();
+    // let mut siv = Cursive::new(|| {
+    //     let crossterm_backend = cursive::backends::termion::Backend::init().unwrap();
+    //     let buffered_backend = cursive_buffered_backend::BufferedBackend::new(crossterm_backend);
+    //     Box::new(buffered_backend)
+    // });
 
     siv.add_global_callback(cursive::event::Key::Esc, |s : &mut Cursive| s.quit());
     siv.load_toml(include_str!("../assets/style.toml")).unwrap();
@@ -76,7 +77,7 @@ fn main() {
             thread::sleep(Duration::from_secs(1));
             // let now = Utc::now().format("%H:%M:%S");
     
-            cb_sink.send(Box::new(move |_s| {
+            //cb_sink.send(Box::new(move |_s| {
                 // let (_columns, _rows, _num_cols, _num_rows) = gen_data();
                 // s.call_on_name("tasks_table", |view: &mut SimpleTableView| {
                 //     view.set_columns(columns);
@@ -85,7 +86,7 @@ fn main() {
                 // s.call_on_name("interval_pane", |view: &mut TextView| {
                 //     view.set_content(format!("{} {} {}", now, num_cols, num_rows));
                 // });
-            })).unwrap();
+            //})).unwrap();
         }
     });
 
