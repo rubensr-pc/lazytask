@@ -6,12 +6,12 @@ borders = "outset"  # Alternatives are "none" and "outset"
 
 # Here we define the color palette.
 [colors]
-    background = "93a1a1"
+    background = "#000000"
     # If the value is an array, the first valid color will be used.
     # If the terminal doesn't support custom color,
     # non-base colors will be skipped.
     shadow     = ["#93a1a1", "black"]
-    view       = "#002b36"
+    view       = "#000000"
 
     # Array and simple values have the same effect.
     primary   = ["#93a1a1"]
@@ -24,5 +24,5 @@ borders = "outset"  # Alternatives are "none" and "outset"
     title_secondary = "#2aa198"
 
     # Lower precision values can use only 3 digits.
-    highlight          = "#859900"
+    highlight          = "#ffffff"
     highlight_inactive = "#b58900"

@@ -159,14 +159,17 @@ impl View for SimpleTableView {
         self.scrollbase.draw(printer, |printer, i| {
             let style = if i == self.focus && self.enabled {
                 if printer.focused {
-                    theme::Style::from(theme::ColorStyle::highlight())
+                    // Active, highlighted row
+                    theme::Style::from(theme::ColorStyle::primary()).combine(theme::Effect::Reverse)
                 } else {
+                    // Inactive, highlighted row
                     theme::Style::from(theme::ColorStyle::primary())
                 }
             } else {
                 match self.selected_row {
-                    Some(r) => if r == i { 
-                        theme::Style::from(theme::ColorStyle::highlight()).combine(theme::Effect::Reverse)
+                    Some(r) => if r == i {
+                        // Selected row
+                        theme::Style::from(theme::ColorStyle::highlight())
                     } else {
                         theme::Style::from(theme::ColorStyle::primary())
                     }
