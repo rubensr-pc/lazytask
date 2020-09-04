@@ -77,7 +77,7 @@ impl SimpleTableView {
     }
 
     pub fn set_rows<S: Into<String>>(&mut self, rows: Vec<Vec<S>>) {
-        let rows = rows
+        let rows: Vec<Vec<String>> = rows
             .into_iter()
             .map(|row| {
                 row.into_iter()
@@ -85,13 +85,17 @@ impl SimpleTableView {
                     .collect()
             })
             .collect();
+
+        if rows.len() <= self.focus {
+            self.focus = 0;
+        }
+
         self.rows = rows;
         self.selected_row = None;
-        self.focus = 0;
         self.scrollbase
             .set_heights(self.last_size.y.saturating_sub(2), self.rows.len());
         
-        self.set_focus_row(0);
+        self.set_focus_row(self.focus);
     }
 
     pub fn rows<S: Into<String>>(self: SimpleTableView, rows: Vec<Vec<S>>) -> Self {

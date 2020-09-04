@@ -1,10 +1,6 @@
 use std::thread;
 use std::time::Duration;
 
-// use rand::Rng;
-
-// use chrono::Utc;
-
 use cursive::Cursive;
 use cursive::traits::*;
 use cursive::views::{Dialog, LinearLayout, Panel, EditView, OnEventView};
@@ -34,11 +30,6 @@ fn main() {
         .collect();
 
     let mut siv = cursive::default();
-    // let mut siv = Cursive::new(|| {
-    //     let crossterm_backend = cursive::backends::termion::Backend::init().unwrap();
-    //     let buffered_backend = cursive_buffered_backend::BufferedBackend::new(crossterm_backend);
-    //     Box::new(buffered_backend)
-    // });
 
     siv.add_global_callback(cursive::event::Key::Esc, |s : &mut Cursive| s.quit());
     siv.load_toml(include_str!("../assets/style.toml")).unwrap();
@@ -74,19 +65,32 @@ fn main() {
     let cb_sink = siv.cb_sink().clone();
     thread::spawn(move || {
         loop {
+            cb_sink.send(Box::new(move |s: &mut Cursive| {
+                let mut text = String::new();
+                let tasks = taskwarrior::get_task_list(&mut text)
+                    .expect("Task List");
+
+                s.call_on_name("tasks_table", |view: &mut SimpleTableView| {
+                    view.set_rows(tasks.rows);
+                });
+            })).unwrap();
             thread::sleep(Duration::from_secs(1));
-            // let now = Utc::now().format("%H:%M:%S");
-    
-            //cb_sink.send(Box::new(move |_s| {
-                // let (_columns, _rows, _num_cols, _num_rows) = gen_data();
-                // s.call_on_name("tasks_table", |view: &mut SimpleTableView| {
-                //     view.set_columns(columns);
-                //     view.set_rows(rows);
-                // });
-                // s.call_on_name("interval_pane", |view: &mut TextView| {
-                //     view.set_content(format!("{} {} {}", now, num_cols, num_rows));
-                // });
-            //})).unwrap();
+        }
+    });
+
+    let cb_sink = siv.cb_sink().clone();
+    thread::spawn(move || {
+        loop {
+            cb_sink.send(Box::new(move |s: &mut Cursive| {
+                let mut text = String::new();
+                let tasks = taskwarrior::get_interval_list(&mut text)
+                    .expect("Intervals List");
+
+                s.call_on_name("intervals_table", |view: &mut SimpleTableView| {
+                    view.set_rows(tasks.rows);
+                });
+            })).unwrap();
+            thread::sleep(Duration::from_secs(1));
         }
     });
 

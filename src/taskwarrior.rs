@@ -2,14 +2,12 @@ use std::str;
 use std::cmp;
 use std::process::Command;
 
-#[allow(dead_code)]
 pub struct TaskList<'a> {
     pub colsizes: Vec<usize>,
     pub columns: Vec<&'a str>,
     pub rows: Vec<Vec<&'a str>>
 }
 
-#[allow(dead_code)]
 pub fn get_interval_list<'a, 'b>(text: &'a mut String)-> Result<TaskList<'a>, &'b str> {
     let output = Command::new("timew")
         .arg("summary")
