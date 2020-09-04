@@ -65,6 +65,18 @@ impl SimpleTableView {
         self.scrollbase.scroll_to(row_index);
     }
 
+    pub fn focus_row(&mut self) -> Option<usize> {
+        if self.rows.is_empty() {
+            None
+        } else {
+            Some(self.focus)
+        }
+    }
+
+    pub fn borrow_row(&mut self, index: usize) -> Option<&mut Vec<String>>{
+        self.rows.get_mut(index)
+    }
+
     pub fn set_columns(&mut self, columns: Vec<TableColumn>) {
         self.columns = columns;
         self.clear();
@@ -87,7 +99,7 @@ impl SimpleTableView {
             .collect();
 
         if rows.len() <= self.focus {
-            self.focus = 0;
+            self.focus = rows.len() - 1;
         }
 
         self.rows = rows;

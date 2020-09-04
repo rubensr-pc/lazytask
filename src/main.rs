@@ -104,7 +104,7 @@ fn show_add_task_dialog(s: &mut Cursive) {
             OnEventView::new(
                 EditView::new()
                     .filler(" ")
-                    .on_submit(task_add)
+                    .on_submit(cb_task_add)
                     .with_name("new_task_name")
                     .fixed_width(50)
             ).on_event(cursive::event::Key::Esc, cancel_dialog))
@@ -112,20 +112,40 @@ fn show_add_task_dialog(s: &mut Cursive) {
     )
 }
 
-fn task_add(_s: &mut Cursive, _text: &str) {}
+fn cb_task_add(s: &mut Cursive, text: &str) {
+    taskwarrior::add_task(text)
+        .expect("Add task");
+    s.pop_layer();
+}
 
 fn task_delete(s: &mut Cursive) {
     s.add_layer(OnEventView::new(
         Dialog::text("Are you sure?")
-            .button("Ok", |s: &mut Cursive| {
-                cancel_dialog(s);
-            })
+            .button("Ok", cb_delete_task)
             .dismiss_button("Cancel"))
         .on_event(cursive::event::Key::Esc, cancel_dialog));
 }
+
+fn cb_delete_task(s: &mut Cursive) {
+    s.call_on_name("tasks_table", |view: &mut SimpleTableView| {
+        match view.focus_row() {
+            Some(index) => {
+                let task_id = view.borrow_row(index)
+                    .expect("Highlighted row")
+                    .get(0)
+                    .expect("Highlighted 0 cell");
+                taskwarrior::delete_task(task_id)
+                    .expect("Add task");
+            },
+            None => {()}
+        }
+    });
+    s.pop_layer();
+}
+
+fn task_done(_s: &mut Cursive) {}
 
 fn cancel_dialog(s: &mut Cursive) {
     s.pop_layer();
 }
 
-fn task_done(_s: &mut Cursive) {}

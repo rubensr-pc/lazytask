@@ -39,6 +39,31 @@ pub fn get_task_list<'a, 'b>(text: &'a mut String) -> Result<TaskList<'a>, &'b s
     parse_task_list(text, true)
 }
 
+pub fn add_task<'a, 'b>(text: &'a str) -> Result<(), &'b str>{
+    let output = Command::new("task")
+        .arg("add")
+        .arg(text)
+        .output();
+
+    match output {
+        Ok(_) => Ok(()),
+        Err(_) => Err("Could not add task")
+    }
+}
+
+pub fn delete_task<'a, 'b>(task_id: &'a str) -> Result<(), &'b str>{
+    let output = Command::new("task")
+        .arg("delete")
+        .arg("rc.confirmation:no")
+        .arg(task_id)
+        .output();
+
+    match output {
+        Ok(_) => Ok(()),
+        Err(_) => Err("Could not delete task")
+    }
+}
+
 fn parse_task_list<'a, 'b>(text: &'a str, sort: bool) -> Result<TaskList<'a>, &'b str> {
     let mut lines = text.lines();
     if lines.count() < 3 {
