@@ -99,7 +99,11 @@ impl SimpleTableView {
             .collect();
 
         if rows.len() <= self.focus {
-            self.focus = rows.len() - 1;
+            self.focus = if rows.len() > 0 {
+                rows.len() - 1
+            } else {
+                0
+            }
         }
 
         self.rows = rows;
