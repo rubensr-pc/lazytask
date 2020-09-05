@@ -48,6 +48,8 @@ fn main() {
             .on_event('d', task_done)
             .on_event(cursive::event::Key::Del, task_delete)
             .on_event(cursive::event::Key::Backspace, task_delete)
+            .on_event(cursive::event::Key::Enter, task_toggle)
+            .on_event(' ', task_toggle)
         ).title("Tasks");
     
     let intervals_table = SimpleTableView::default()
@@ -55,9 +57,11 @@ fn main() {
         .rows(intervals.rows);
 
     let interval_pane = Panel::new(
-        intervals_table
-            .with_name("intervals_table"))
-        .title("Intervals");
+        OnEventView::new(
+            intervals_table.with_name("intervals_table"))
+            .on_event(cursive::event::Key::Del, time_delete)
+            .on_event(cursive::event::Key::Backspace, time_delete)
+        ).title("Intervals");
 
     let view = LinearLayout::horizontal()
         .child(task_pane.full_height().fixed_width(50))
@@ -100,11 +104,21 @@ fn main() {
         loop {
             cb_sink.send(Box::new(move |s: &mut Cursive| {
                 let mut text = String::new();
-                let tasks = taskwarrior::get_interval_list(&mut text)
+                let intervals = taskwarrior::get_interval_list(&mut text)
                     .expect("Intervals List");
-
+            
                 s.call_on_name("intervals_table", |view: &mut SimpleTableView| {
-                    view.set_rows(tasks.rows);
+                    let focus_row = view.focus_row();
+                    let intervals_columns: Vec<TableColumn> = intervals.columns
+                        .into_iter()
+                        .zip(intervals.colsizes)
+                        .map(|(title, width)| TableColumn::new(title, Some(TableColumnWidth::Absolute(width))))
+                        .collect();
+                    view.set_columns(intervals_columns);
+                    view.set_rows(intervals.rows);
+                    if focus_row.is_some() {
+                        view.set_focus_row(focus_row.unwrap());
+                    }
                 });
             })).unwrap();
             thread::sleep(Duration::from_secs(1));
@@ -135,10 +149,44 @@ fn cb_task_add(s: &mut Cursive, text: &str) {
     s.pop_layer();
 }
 
+fn task_toggle(s: &mut Cursive) {
+    s.call_on_name("tasks_table", |view: &mut SimpleTableView| {
+        let task_id = match view.focus_row() {
+            Some(index) => index,
+            None => {
+                return ();
+            }
+        };
+
+        let active = taskwarrior::get_active_tasks()
+            .expect("Active tasks");
+        active.iter()
+            .for_each(|index| {
+                taskwarrior::stop_task(&(index + 1).to_string())
+                    .expect("Stop task");
+            });
+        
+        if active.len() == 1 && active.contains(&task_id) {
+            return;
+        }
+
+        taskwarrior::start_task(&(task_id + 1).to_string())
+            .expect("Task start");
+    });
+}
+
 fn task_delete(s: &mut Cursive) {
     s.add_layer(OnEventView::new(
         Dialog::text("Are you sure?")
             .button("Ok", cb_delete_task)
+            .dismiss_button("Cancel"))
+        .on_event(cursive::event::Key::Esc, cancel_dialog));
+}
+
+fn time_delete(s: &mut Cursive) {
+    s.add_layer(OnEventView::new(
+        Dialog::text("Are you sure?")
+            .button("Ok", cb_delete_time)
             .dismiss_button("Cancel"))
         .on_event(cursive::event::Key::Esc, cancel_dialog));
 }
@@ -152,7 +200,7 @@ fn cb_delete_task(s: &mut Cursive) {
                     .get(0)
                     .expect("Highlighted 0 cell");
                 taskwarrior::delete_task(task_id)
-                    .expect("Add task");
+                    .expect("Delete task");
             },
             None => {()}
         }
@@ -160,7 +208,38 @@ fn cb_delete_task(s: &mut Cursive) {
     s.pop_layer();
 }
 
-fn task_done(_s: &mut Cursive) {}
+fn cb_delete_time(s: &mut Cursive) {
+    s.call_on_name("intervals_table", |view: &mut SimpleTableView| {
+        match view.focus_row() {
+            Some(index) => {
+                let interval_id = view.borrow_row(index)
+                    .expect("Highlighted row")
+                    .get(3)
+                    .expect("Highlighted 0 cell");
+                taskwarrior::delete_time(interval_id)
+                    .expect("Delete interval");
+            },
+            None => {()}
+        }
+    });
+    s.pop_layer();
+}
+
+fn task_done(s: &mut Cursive) {
+    s.call_on_name("tasks_table", |view: &mut SimpleTableView| {
+        match view.focus_row() {
+            Some(index) => {
+                let task_id = view.borrow_row(index)
+                    .expect("Highlighted row")
+                    .get(0)
+                    .expect("Highlighted 0 cell");
+                taskwarrior::done_task(task_id)
+                    .expect("Add task");
+            },
+            None => {()}
+        }
+    });
+}
 
 fn cancel_dialog(s: &mut Cursive) {
     s.pop_layer();

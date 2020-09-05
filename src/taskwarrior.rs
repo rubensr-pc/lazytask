@@ -73,6 +73,42 @@ pub fn add_task<'a, 'b>(text: &'a str) -> Result<(), &'b str>{
     }
 }
 
+pub fn start_task<'a, 'b>(text: &'a str) -> Result<(), &'b str>{
+    let output = Command::new("task")
+        .arg("start")
+        .arg(text)
+        .output();
+
+    match output {
+        Ok(_) => Ok(()),
+        Err(_) => Err("Could not start task")
+    }
+}
+
+pub fn done_task<'a, 'b>(text: &'a str) -> Result<(), &'b str>{
+    let output = Command::new("task")
+        .arg("done")
+        .arg(text)
+        .output();
+
+    match output {
+        Ok(_) => Ok(()),
+        Err(_) => Err("Could not done task")
+    }
+}
+
+pub fn stop_task<'a, 'b>(text: &'a str) -> Result<(), &'b str>{
+    let output = Command::new("task")
+        .arg("stop")
+        .arg(text)
+        .output();
+
+    match output {
+        Ok(_) => Ok(()),
+        Err(_) => Err("Could not stop task")
+    }
+}
+
 pub fn delete_task<'a, 'b>(task_id: &'a str) -> Result<(), &'b str>{
     let output = Command::new("task")
         .arg("delete")
@@ -83,6 +119,18 @@ pub fn delete_task<'a, 'b>(task_id: &'a str) -> Result<(), &'b str>{
     match output {
         Ok(_) => Ok(()),
         Err(_) => Err("Could not delete task")
+    }
+}
+
+pub fn delete_time<'a, 'b>(interval_id: &'a str) -> Result<(), &'b str>{
+    let output = Command::new("timew")
+        .arg("delete")
+        .arg(interval_id)
+        .output();
+
+    match output {
+        Ok(_) => Ok(()),
+        Err(_) => Err("Could not delete interval")
     }
 }
 
