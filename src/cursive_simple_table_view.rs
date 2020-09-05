@@ -18,7 +18,7 @@ pub struct SimpleTableView {
     columns: Vec<TableColumn>,
     rows: Vec<Vec<String>>,
     focus: usize,
-    selected_row: Option<usize>
+    selected_rows: Vec<usize>
 }
 
 impl Default for SimpleTableView {
@@ -38,13 +38,13 @@ impl SimpleTableView {
             columns: Vec::new(),
             rows: Vec::new(),
             focus: 0,
-            selected_row: None
+            selected_rows: Vec::new()
         }
     }
 
     pub fn clear(&mut self) {
         self.rows.clear();
-        self.selected_row = None;
+        self.selected_rows = Vec::new();
         self.focus = 0;
     }
 
@@ -52,17 +52,19 @@ impl SimpleTableView {
         self.rows.is_empty()
     }
 
-    pub fn set_selected_row(&mut self, row_index: Option<usize>) {
-        self.selected_row = row_index;
+    pub fn set_selected_rows(&mut self, indices: Vec<usize>) {
+        self.selected_rows = indices;
     }
 
-    pub fn selected_row(self: SimpleTableView, row_index: Option<usize>) -> Self {
-        self.with(|t| t.set_selected_row(row_index))
+    pub fn selected_rows(self: SimpleTableView, indices: Vec<usize>) -> Self {
+        self.with(|t| t.set_selected_rows(indices))
     }
 
     pub fn set_focus_row(&mut self, row_index: usize) {
-        self.focus = row_index;
-        self.scrollbase.scroll_to(row_index);
+        if !self.rows.is_empty() {
+            self.focus = cmp::min(self.rows.len() -1, row_index);
+            self.scrollbase.scroll_to(row_index);
+        }
     }
 
     pub fn focus_row(&mut self) -> Option<usize> {
@@ -107,7 +109,7 @@ impl SimpleTableView {
         }
 
         self.rows = rows;
-        self.selected_row = None;
+        self.selected_rows = Vec::new();
         self.scrollbase
             .set_heights(self.last_size.y.saturating_sub(2), self.rows.len());
         
@@ -180,20 +182,15 @@ impl View for SimpleTableView {
             let style = if i == self.focus && self.enabled {
                 if printer.focused {
                     // Active, highlighted row
-                    theme::Style::from(theme::ColorStyle::primary()).combine(theme::Effect::Reverse)
+                    theme::Style::from(theme::ColorStyle::secondary()).combine(theme::Effect::Reverse)
                 } else {
                     // Inactive, highlighted row
                     theme::Style::from(theme::ColorStyle::primary())
                 }
             } else {
-                match self.selected_row {
-                    Some(r) => if r == i {
-                        // Selected row
-                        theme::Style::from(theme::ColorStyle::highlight())
-                    } else {
-                        theme::Style::from(theme::ColorStyle::primary())
-                    }
-                    None => theme::Style::from(theme::ColorStyle::primary())
+                match self.selected_rows.binary_search(&i) {
+                    Ok(_) => theme::Style::from(theme::ColorStyle::secondary()).combine(theme::Effect::Bold),
+                    Err(_) => theme::Style::from(theme::ColorStyle::primary())
                 }
             };
 

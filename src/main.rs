@@ -38,7 +38,8 @@ fn main() {
 
     let tasks_table = SimpleTableView::default()
         .columns(tasks_columns)
-        .rows(tasks.rows);
+        .rows(tasks.rows)
+        .selected_rows(active);
     
     let task_pane = Panel::new(
         OnEventView::new(
@@ -73,7 +74,21 @@ fn main() {
                     .expect("Task List");
 
                 s.call_on_name("tasks_table", |view: &mut SimpleTableView| {
+                    let focus_row = view.focus_row();
+                    let tasks_columns: Vec<TableColumn> = tasks.columns
+                        .into_iter()
+                        .zip(tasks.colsizes)
+                        .map(|(title, width)| TableColumn::new(title, Some(TableColumnWidth::Absolute(width))))
+                        .collect();
+                    let active = taskwarrior::get_active_tasks()
+                        .expect("Active tasks");
+    
+                    view.set_columns(tasks_columns);
                     view.set_rows(tasks.rows);
+                    view.set_selected_rows(active);
+                    if focus_row.is_some() {
+                        view.set_focus_row(focus_row.unwrap());
+                    }
                 });
             })).unwrap();
             thread::sleep(Duration::from_secs(1));

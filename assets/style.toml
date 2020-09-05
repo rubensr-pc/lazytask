@@ -15,7 +15,7 @@ borders = "outset"  # Alternatives are "none" and "outset"
 
     # Array and simple values have the same effect.
     primary   = ["#93a1a1"]
-    secondary = "#839496"
+    secondary = "#00EE00"
     tertiary  = "#657b83"
 
     # Hex values can use lower or uppercase.
