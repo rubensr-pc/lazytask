@@ -14,6 +14,8 @@ fn main() {
     let mut tasks_text = String::new();
     let tasks = taskwarrior::get_task_list(&mut tasks_text)
         .expect("Task List");
+    let active = taskwarrior::get_active_tasks()
+        .expect("Active Tasks");
     let tasks_columns: Vec<TableColumn> = tasks.columns
         .into_iter()
         .zip(tasks.colsizes)

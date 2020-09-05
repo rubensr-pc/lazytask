@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::str;
 use std::cmp;
 use std::process::Command;
@@ -6,6 +7,27 @@ pub struct TaskList<'a> {
     pub colsizes: Vec<usize>,
     pub columns: Vec<&'a str>,
     pub rows: Vec<Vec<&'a str>>
+}
+
+pub fn get_active_tasks<'a>() -> Result<Vec<usize>, Box<dyn Error>> {
+    let stdout = Command::new("task")
+        .arg("active")
+        .output()?
+        .stdout;
+
+    let text = String::from_utf8(stdout)?;
+
+    let mut list = parse_task_list(&text, false)?;
+
+    let indices: Vec<usize> = list.rows
+        .iter_mut()
+        .map(|row| {
+            let index = *row.get(0).unwrap();
+            index.parse::<usize>().unwrap() - 1
+        })
+        .collect();
+
+    Ok(indices)
 }
 
 pub fn get_interval_list<'a, 'b>(text: &'a mut String)-> Result<TaskList<'a>, &'b str> {
