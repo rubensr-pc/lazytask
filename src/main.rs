@@ -64,7 +64,7 @@ fn main() {
         ).title("Intervals");
 
     let view = LinearLayout::horizontal()
-        .child(task_pane.full_height().fixed_width(50))
+        .child(task_pane.full_height().fixed_width(80))
         .child(interval_pane.full_height().full_width());
 
     siv.add_fullscreen_layer(view);
