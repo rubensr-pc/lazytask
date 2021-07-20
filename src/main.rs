@@ -34,6 +34,7 @@ fn main() {
     let mut siv = cursive::default();
 
     siv.add_global_callback(cursive::event::Key::Esc, |s : &mut Cursive| s.quit());
+    siv.add_global_callback('q', |s : &mut Cursive| s.quit());
     siv.load_toml(include_str!("../assets/style.toml")).unwrap();
 
     let tasks_table = SimpleTableView::default()
@@ -64,7 +65,7 @@ fn main() {
         ).title("Intervals");
 
     let view = LinearLayout::horizontal()
-        .child(task_pane.full_height().fixed_width(80))
+        .child(task_pane.full_height().fixed_width(100))
         .child(interval_pane.full_height().full_width());
 
     siv.add_fullscreen_layer(view);
