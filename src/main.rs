@@ -34,13 +34,14 @@ fn main() {
     let mut siv = cursive::default();
 
     siv.add_global_callback(cursive::event::Key::Esc, |s : &mut Cursive| s.quit());
+    siv.add_global_callback('q', |s : &mut Cursive| s.quit());
     siv.load_toml(include_str!("../assets/style.toml")).unwrap();
 
     let tasks_table = SimpleTableView::default()
         .columns(tasks_columns)
         .rows(tasks.rows)
         .selected_rows(active);
-    
+
     let task_pane = Panel::new(
         OnEventView::new(
             tasks_table.with_name("tasks_table"))
@@ -51,7 +52,7 @@ fn main() {
             .on_event(cursive::event::Key::Enter, task_toggle)
             .on_event(' ', task_toggle)
         ).title("Tasks");
-    
+
     let intervals_table = SimpleTableView::default()
         .columns(intervals_columns)
         .rows(intervals.rows);
@@ -64,7 +65,7 @@ fn main() {
         ).title("Intervals");
 
     let view = LinearLayout::horizontal()
-        .child(task_pane.full_height().fixed_width(80))
+        .child(task_pane.full_height().fixed_width(100))
         .child(interval_pane.full_height().full_width());
 
     siv.add_fullscreen_layer(view);
@@ -86,7 +87,7 @@ fn main() {
                         .collect();
                     let active = taskwarrior::get_active_tasks()
                         .expect("Active tasks");
-    
+
                     view.set_columns(tasks_columns);
                     view.set_rows(tasks.rows);
                     view.set_selected_rows(active);
@@ -106,7 +107,7 @@ fn main() {
                 let mut text = String::new();
                 let intervals = taskwarrior::get_interval_list(&mut text)
                     .expect("Intervals List");
-            
+
                 s.call_on_name("intervals_table", |view: &mut SimpleTableView| {
                     let focus_row = view.focus_row();
                     let intervals_columns: Vec<TableColumn> = intervals.columns
@@ -165,7 +166,7 @@ fn task_toggle(s: &mut Cursive) {
                 taskwarrior::stop_task(&(index + 1).to_string())
                     .expect("Stop task");
             });
-        
+
         if active.len() == 1 && active.contains(&task_id) {
             return;
         }
@@ -244,4 +245,3 @@ fn task_done(s: &mut Cursive) {
 fn cancel_dialog(s: &mut Cursive) {
     s.pop_layer();
 }
-
