@@ -5,7 +5,7 @@ use cursive::align::HAlign;
 use cursive::direction::Direction;
 use cursive::event::{Event, EventResult, Key};
 use cursive::theme;
-use cursive::view::{ScrollBase, View};
+use cursive::view::{ScrollBase, CannotFocus, View};
 use cursive::With;
 use cursive::Printer;
 
@@ -242,8 +242,8 @@ impl View for SimpleTableView {
         self.last_size = size;
     }
 
-    fn take_focus(&mut self, _: Direction) -> bool {
-        self.enabled
+    fn take_focus(&mut self, _: Direction) -> Result<EventResult, CannotFocus> {
+        self.enabled.then(EventResult::consumed).ok_or(CannotFocus)
     }
 
     fn on_event(&mut self, event: Event) -> EventResult {
